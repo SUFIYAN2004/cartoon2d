@@ -1,6 +1,11 @@
 # cartoon2d
 ![demo](road_trip.gif)
 
+```python
+pip install git+https://github.com/SUFIYAN2004/cartoon2d
+```
+
+
 Draw and animate 2D cartoons with plain function calls. No axes, patches or figures to manage.
 
 ```python
