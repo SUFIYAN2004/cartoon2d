@@ -1,6 +1,7 @@
 # cartoon2d
 ![demo](road_trip.gif)
 
+# install the library 
 ```python
 pip install git+https://github.com/SUFIYAN2004/cartoon2d
 ```
