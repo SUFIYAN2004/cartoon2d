@@ -1,5 +1,5 @@
 # cartoon2d
-
+![demo](road_trip.gif)
 Draw and animate 2D cartoons with plain function calls. No axes, patches or figures to manage.
 
 ```python
