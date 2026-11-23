@@ -8,7 +8,7 @@ Draw and animate 2D cartoons with plain function calls. No axes, patches or figu
 </p>
 
 watch you can generate long video 
-[![Mia and Max: The Race](drive.gif)](https://your-video-link-here)
+[![Mia and Max: The Race](road_trip.gif)](https://github.com/SUFIYAN2004/cartoon2d/blob/main/mia_and_max_the_race.mp4)
 ~~~python
 from cartoon2d import *
 
