@@ -2,7 +2,7 @@
 
 Draw and animate 2D cartoons with plain function calls. No axes, patches or figures to manage.
 
-![road trip](road_trip.gif)
+![road trip](road_trip.gif) ![night winter](winter.gif)
 
 ~~~python
 from cartoon2d import *
