@@ -5,16 +5,28 @@ from matplotlib.colors import to_rgb
 
 __all__ = ["Shape", "Car", "Sun", "Moon", "Star", "House", "Tree", "Pine", "Cloud", "Mountain",
            "Flower", "Fence", "Person", "Bird", "Boat", "Balloon", "Rocket", "Fish", "Ball",
-           "Rect", "Disc", "Triangle", "Label", "dark", "light"]
+           "Rect", "Disc", "Triangle", "Label", "Cube", "Sphere", "Windmill", "Snowman", "Lamp",
+           "Ufo", "Sprite", "Bubble", "dark", "light"]
 
 def dark(c, k=0.7):
     r, g, b = to_rgb(c); return (r * k, g * k, b * k)
 def light(c, k=0.5):
     r, g, b = to_rgb(c); return (r + (1 - r) * k, g + (1 - g) * k, b + (1 - b) * k)
 
+def _bar(cx, cy, length, width, angle, color):
+    dx, dy = math.cos(angle) * length / 2, math.sin(angle) * length / 2
+    px, py = -math.sin(angle) * width / 2, math.cos(angle) * width / 2
+    return Polygon([(cx - dx - px, cy - dy - py), (cx + dx - px, cy + dy - py),
+                    (cx + dx + px, cy + dy + py), (cx - dx + px, cy - dy + py)], color=color)
+
+def _limb(x, y, length, width, swing, color):
+    ex, ey = x + length * math.sin(swing), y - length * math.cos(swing)
+    return _bar((x + ex) / 2, (y + ey) / 2, length, width, math.atan2(ey - y, ex - x), color)
+
 class Shape:
     """Local coordinates: origin = bottom-centre (or centre if origin == 'center'), y up."""
     origin = "bottom"
+    hud = False
     def __init__(self, color, x, y, size=1, alpha=1.0, rot=0.0, flip=False, z=0, depth=0.0, shadow=False):
         self.color, self.x, self.y, self.size = color, x, y, size
         self.alpha, self.rot, self.flip, self.z = alpha, rot, flip, z
@@ -22,7 +34,8 @@ class Shape:
         self._init = self.state()
         self._plan = dict(self._init)       # where the last animation ends (for chaining)
     def state(self):
-        return dict(x=self.x, y=self.y, size=self.size, rot=self.rot, alpha=self.alpha, depth=self.depth, phase=self.phase)
+        return dict(x=self.x, y=self.y, size=self.size, rot=self.rot, alpha=self.alpha,
+                    depth=self.depth, phase=self.phase)
     def reset(self):
         for k, v in self._init.items(): setattr(self, k, v)
     def set(self, prop, v):
@@ -45,7 +58,9 @@ class Car(Shape):
                Polygon([(0.3, 5.8), (0.3, 8.3), (2.4, 8.3), (3.6, 5.8)], color="#cfe8ff"),
                Circle((6.6, 4), 0.6, color="#ffe066")]
         for wx in (-3.5, 3.5):
-            out += [Circle((wx, 2), 1.8, color="black"), Circle((wx, 2), 0.7, color="#bbbbbb")]
+            out += [Circle((wx, 2), 1.8, color="black"), Circle((wx, 2), 1.25, color="#b0b0b0")]
+            out += [_bar(wx, 2, 2.5, 0.28, self.phase + k * math.pi / 3, "#555555") for k in range(3)]
+            out.append(Circle((wx, 2), 0.35, color="#333333"))
         return out
 
 class Sun(Shape):
@@ -126,8 +141,9 @@ class Fence(Shape):
 class Person(Shape):
     def parts(self):
         c, skin = self.color, "#f1c27d"
-        return [Rectangle((-1.6, 0), 1.3, 6, color="#333333"), Rectangle((0.3, 0), 1.3, 6, color="#333333"),
-                Rectangle((-3.2, 6.5), 1.2, 5, color=dark(c, .8)), Rectangle((2, 6.5), 1.2, 5, color=dark(c, .8)),
+        sw = 0.55 * math.sin(self.phase)
+        return [_limb(-0.95, 6, 6, 1.3, sw, "#333333"), _limb(0.95, 6, 6, 1.3, -sw, "#333333"),
+                _limb(-2.4, 11.6, 5, 1.2, -0.8 * sw, dark(c, .8)), _limb(2.4, 11.6, 5, 1.2, 0.8 * sw, dark(c, .8)),
                 Rectangle((-1.8, 6), 3.6, 6, color=c),
                 Circle((0, 14), 2, color=skin), Ellipse((0, 15.3), 4, 1.5, color="#3b2a1a")]
 
@@ -200,41 +216,6 @@ class Label(Shape):
         if self.alpha <= 0: return
         ax.text(self.x, self.y, self.text, color=self.color, fontsize=self.fontsize * self.size,
                 ha="center", va="center", rotation=self.rot, alpha=self.alpha, fontweight="bold", zorder=10)
-# ---------------- v0.3 additions ----------------
-Shape.hud = False
-
-def _bar(cx, cy, length, width, angle, color):
-    dx, dy = math.cos(angle) * length / 2, math.sin(angle) * length / 2
-    px, py = -math.sin(angle) * width / 2, math.cos(angle) * width / 2
-    return Polygon([(cx - dx - px, cy - dy - py), (cx + dx - px, cy + dy - py),
-                    (cx + dx + px, cy + dy + py), (cx - dx + px, cy - dy + py)], color=color)
-
-def _limb(x, y, length, width, swing, color):
-    ex, ey = x + length * math.sin(swing), y - length * math.cos(swing)
-    return _bar((x + ex) / 2, (y + ey) / 2, length, width, math.atan2(ey - y, ex - x), color)
-
-class Car(Shape):
-    def parts(self):
-        c = self.color
-        out = [Rectangle((-7, 2), 14, 3.5, color=c),
-               Polygon([(-4, 5.5), (-2, 9), (3, 9), (5, 5.5)], color=c),
-               Polygon([(-3.3, 5.8), (-2.2, 8.3), (-0.2, 8.3), (-0.2, 5.8)], color="#cfe8ff"),
-               Polygon([(0.3, 5.8), (0.3, 8.3), (2.4, 8.3), (3.6, 5.8)], color="#cfe8ff"),
-               Circle((6.6, 4), 0.6, color="#ffe066")]
-        for wx in (-3.5, 3.5):
-            out += [Circle((wx, 2), 1.8, color="black"), Circle((wx, 2), 1.25, color="#b0b0b0")]
-            out += [_bar(wx, 2, 2.5, 0.28, self.phase + k * math.pi / 3, "#555555") for k in range(3)]
-            out.append(Circle((wx, 2), 0.35, color="#333333"))
-        return out
-
-class Person(Shape):
-    def parts(self):
-        c, skin = self.color, "#f1c27d"
-        sw = 0.55 * math.sin(self.phase)
-        return [_limb(-0.95, 6, 6, 1.3, sw, "#333333"), _limb(0.95, 6, 6, 1.3, -sw, "#333333"),
-                _limb(-2.4, 11.6, 5, 1.2, -0.8 * sw, dark(c, .8)), _limb(2.4, 11.6, 5, 1.2, 0.8 * sw, dark(c, .8)),
-                Rectangle((-1.8, 6), 3.6, 6, color=c),
-                Circle((0, 14), 2, color=skin), Ellipse((0, 15.3), 4, 1.5, color="#3b2a1a")]
 
 class Cube(Shape):
     """A real rotating cube: 3D corners, yaw = phase, tilted 30 degrees toward the viewer."""
@@ -268,4 +249,86 @@ class Sphere(Shape):
             out.append(Circle((-1.2 * t, 1.6 * t), 6 * (1 - 0.82 * t), color=col))
         return out
 
-__all__ += ["Cube", "Sphere"]
+class Windmill(Shape):
+    def parts(self):
+        c, L = self.color, 9
+        out = [Polygon([(-3, 0), (3, 0), (1.6, 13), (-1.6, 13)], color=dark(c, .8)),
+               Rectangle((-0.8, 0), 1.6, 3.2, color="#4a2a14")]
+        for k in range(4):
+            a = self.phase + k * math.pi / 2
+            out.append(_bar((L / 2) * math.cos(a), 13 + (L / 2) * math.sin(a), L, 1.5, a, light(c, .6)))
+        out.append(Circle((0, 13), 1.1, color="#555555"))
+        return out
+
+class Snowman(Shape):
+    def parts(self):
+        c = self.color
+        return [Circle((0, 3), 3, color=c), Circle((0, 8), 2.3, color=c), Circle((0, 11.8), 1.7, color=c),
+                Rectangle((-1.5, 13), 3, 1.8, color="#333333"), Rectangle((-2.2, 13), 4.4, 0.5, color="#333333"),
+                Polygon([(0, 11.8), (2.6, 11.4), (0, 11.2)], color="#ff8a00"),
+                Circle((-0.6, 12.4), 0.25, color="black"), Circle((0.6, 12.4), 0.25, color="black"),
+                Circle((0, 8.5), 0.3, color="black"), Circle((0, 6.8), 0.3, color="black")]
+
+class Lamp(Shape):
+    def parts(self):
+        return [Rectangle((-0.3, 0), 0.6, 11, color="#455a64"), Rectangle((-1.2, 0), 2.4, 0.8, color="#455a64"),
+                Polygon([(-1.6, 11.2), (1.6, 11.2), (1.1, 12.8), (-1.1, 12.8)], color="#37474f"),
+                Ellipse((0, 10.4), 2.6, 2.0, color=self.color)]
+
+class Ufo(Shape):
+    origin = "center"
+    def parts(self):
+        out = [Ellipse((0, 1.2), 5, 4, color="#b3e5fc"), Ellipse((0, 0), 13, 3.4, color=self.color)]
+        out += [Circle((x, -0.2), 0.45, color="#ffeb3b") for x in (-4, 0, 4)]
+        return out
+
+class Sprite(Shape):
+    """Your own image (path or RGBA numpy array) as a shape. Bottom-centre origin."""
+    def __init__(self, path, x, y, size=1, width=10, **kw):
+        import numpy as np
+        from PIL import Image
+        arr = path if isinstance(path, np.ndarray) else np.asarray(Image.open(path).convert("RGBA"))
+        self.img = arr
+        self.w = width; self.h = width * arr.shape[0] / arr.shape[1]
+        super().__init__(None, x, y, size, **kw)
+    def draw(self, ax):
+        if self.alpha <= 0: return
+        sx = -self.size if self.flip else self.size
+        tr = Affine2D().scale(sx, self.size).rotate_deg(self.rot).translate(self.x, self.y) + ax.transData
+        ax.imshow(self.img, extent=(-self.w / 2, self.w / 2, 0, self.h), transform=tr, alpha=self.alpha,
+                  aspect="auto", interpolation="bilinear", zorder=1)
+
+BUBBLE_H = {"Person": 17.5, "Car": 10.5, "Bird": 3, "Fish": 3, "Ball": 4.5, "Snowman": 15.5,
+            "Ufo": 4, "Rocket": 17.5, "Balloon": 13.5, "Boat": 11, "Tree": 15.5, "House": 17.5}
+
+class Bubble(Shape):
+    """Speech bubble that follows `target`. Use Talk(), not this directly."""
+    origin = "center"
+    def __init__(self, target, text, scene, color="black", **kw):
+        self.target, self.text, self.scene = target, text, scene
+        super().__init__(color, 50, 30, 1, z=20, **kw)
+        self.hud = True
+    def draw(self, ax):
+        if self.alpha <= 0: return
+        import textwrap
+        from matplotlib.patches import FancyBboxPatch
+        sc = self.scene
+        sx, sy, ss, f = sc._project(self.target)
+        H = BUBBLE_H.get(type(self.target).__name__, 12) * ss
+        k = sc.w / sc.width_px
+        fs = 0.022 * sc.width_px
+        cw = 0.56 * fs * 100 / 72 * k
+        lh = 1.5 * fs * 100 / 72 * k
+        lines = textwrap.wrap(self.text, 26) or [""]
+        bw = max(len(l) for l in lines) * cw + 3
+        bh = len(lines) * lh + 2
+        cx = min(max(sx, bw / 2 + 1), sc.w - bw / 2 - 1)
+        by = min(sy + H + 3, sc.h - bh - 1)
+        tx = min(max(sx, cx - bw / 2 + 2), cx + bw / 2 - 2)
+        ax.add_patch(Polygon([(tx - 1.2, by + 0.2), (tx + 1.2, by + 0.2), (sx, sy + H + 0.5)],
+                             facecolor="white", edgecolor="#222222", linewidth=1.5, alpha=self.alpha, zorder=29))
+        ax.add_patch(FancyBboxPatch((cx - bw / 2, by), bw, bh, boxstyle="round,pad=0,rounding_size=1.5",
+                                    facecolor="white", edgecolor="#222222", linewidth=1.5, alpha=self.alpha, zorder=30))
+        for i, l in enumerate(lines):
+            ax.text(cx, by + bh - 1 - (i + 0.5) * lh, l, ha="center", va="center", fontsize=fs,
+                    color=self.color, alpha=self.alpha, zorder=31, fontweight="bold", clip_on=False)

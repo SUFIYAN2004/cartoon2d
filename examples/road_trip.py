@@ -26,6 +26,6 @@ Move(walker, (170, 12), 0, 150, "linear"); Walk(walker, 28, 0, 150)
 cube = DrawCube("orange", 120, 11, 1.1, depth=1, shadow=True)
 Spin3D(cube, 3, 0, 150)
 
-Say("cartoon2d 0.3", 50, 52, 5, 60)
+Say("cartoon2d", 50, 52, 5, 60)
 CameraZoom(1.25, 110, 150)
 Save("road_trip.gif", fps=25)

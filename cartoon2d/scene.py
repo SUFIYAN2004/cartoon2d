@@ -34,6 +34,7 @@ class Scene:
         self.ground = ground if ground is not None else t["ground"]
         self.shapes, self.tracks, self.follows = [], [], []
         self.camera = Camera(w, h)
+        self.length = None
 
     def add(self, shape):
         self.shapes.append(shape); return shape
@@ -43,6 +44,7 @@ class Scene:
                                 ease=easing.get(ease), mode=mode))
 
     def n_frames(self, hold=0):
+        if self.length: return int(self.length)
         return int(max([t["end"] for t in self.tracks] + [0])) + 1 + hold
 
     def _run(self, mode, t):
@@ -119,18 +121,48 @@ class Scene:
         display(Image.fromarray(self.frame(t)))
 
     def save(self, path="scene.gif", fps=20, hold=0, show=True):
-        if path.lower().endswith(".png"):
+        low = path.lower()
+        if low.endswith(".png"):
             Image.fromarray(self.frame(0)).save(path)
-        elif path.lower().endswith(".gif"):
+        elif low.endswith(".gif"):
             imgs = [Image.fromarray(f) for f in self.frames(hold)]
             imgs[0].save(path, save_all=True, append_images=imgs[1:],
                          duration=max(20, int(1000 / fps)), loop=0)
+        elif low.endswith(".mp4"):
+            self._save_mp4(path, fps, hold)
         else:
-            raise ValueError("use a .gif or .png path")
+            raise ValueError("use a .gif, .png or .mp4 path")
         if show:
-            from IPython.display import Image as IPImage, display
-            display(IPImage(path))
+            try:
+                import os
+                from IPython.display import Image as IPImage, Video, display
+                if low.endswith(".mp4"):
+                    display(Video(path, embed=os.path.getsize(path) < 20000000, width=640))
+                else:
+                    display(IPImage(path))
+            except ImportError:
+                pass
         return path
+
+    def _save_mp4(self, path, fps, hold):
+        """Streams frames to ffmpeg one at a time, so memory stays flat for long videos."""
+        import shutil, subprocess
+        if shutil.which("ffmpeg") is None:
+            raise RuntimeError("ffmpeg not found. Install it (Ubuntu/Colab: apt install ffmpeg) or save a .gif")
+        n = self.n_frames(hold)
+        first = self.frame(0)
+        h, w = first.shape[:2]
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
+               "-s", "%dx%d" % (w, h), "-r", str(fps), "-i", "-",
+               "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-pix_fmt", "yuv420p",
+               "-preset", "veryfast", "-crf", "23", path]
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        p.stdin.write(first.tobytes())
+        for t in range(1, n):
+            p.stdin.write(self.frame(t).tobytes())
+            if n > 600 and t % 300 == 0: print("  frame %d / %d" % (t, n), flush=True)
+        p.stdin.close(); p.wait()
+        if p.returncode: raise RuntimeError("ffmpeg failed")
 
     def filmstrip(self, n=6, width=260):
         total = self.n_frames()

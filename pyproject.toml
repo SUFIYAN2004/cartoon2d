@@ -4,11 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cartoon2d"
-version = "0.3.0"
+version = "0.6.0"
 description = "Draw and animate simple 2D cartoons with one-line calls like DrawCar('red', 10, 5)"
 readme = "README.md"
+authors = [{name = "Sufiyan"}]
+keywords = ["cartoon", "animation", "gif", "2d", "drawing"]
 requires-python = ">=3.8"
 dependencies = ["matplotlib", "numpy", "pillow"]
+
+[project.optional-dependencies]
+svg = ["svgpath2mpl"]
+
+[project.urls]
+Homepage = "https://github.com/SUFIYAN2004/cartoon2d"
 
 [tool.setuptools]
 packages = ["cartoon2d"]

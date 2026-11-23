@@ -1,4 +1,5 @@
 from .shapes import *
 from .scene import Scene
 from .api import *
-__version__ = "0.3.0"
+from .series import Episode
+__version__ = "0.6.0"
