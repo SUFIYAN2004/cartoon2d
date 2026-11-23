@@ -7,6 +7,8 @@ Draw and animate 2D cartoons with plain function calls. No axes, patches or figu
   <img src="winter.gif" alt="night winter" width="48%" />
 </p>
 
+watch you can generate long video 
+![mia and max the race](mia_and_max_the_race.mp4)
 ~~~python
 from cartoon2d import *
 
