@@ -6,7 +6,9 @@ Draw and animate 2D cartoons with plain function calls. No axes, patches or figu
   <img src="road_trip.gif" alt="road trip" width="48%" />
   <img src="winter.gif" alt="night winter" width="48%" />
 </p>
-
+<p align="center">
+  <img src="shapes.png" alt="Available Shapes" width="600" />
+</p>
 ~~~python
 from cartoon2d import *
 
